@@ -215,10 +215,22 @@ $("tutProximo").onclick = tutAvancar;
 $("tutPular").onclick = tutFim;
 $("abrirTutorial").onclick = tutIniciar;
 
-fetch("/api/elementos")
+// direto da PubChem (tem CORS), assim roda em hospedagem estática como a Vercel
+fetch("https://pubchem.ncbi.nlm.nih.gov/rest/pug/periodictable/JSON")
   .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-  .then((dados) => {
-    EL = dados;
+  .then(({ Table: t }) => {
+    const cols = t.Columns.Column;
+    EL = t.Row.map(({ Cell }) => {
+      const d = Object.fromEntries(cols.map((c, i) => [c, Cell[i]]));
+      return {
+        z: +d.AtomicNumber,
+        simbolo: d.Symbol,
+        nome_en: d.Name,
+        massa: parseFloat(d.AtomicMass) || 0,
+        grupo: d.GroupBlock,
+        cor: d.CPKHexColor || "909090",
+      };
+    });
     $("tabela").innerHTML = EL.map((el) => {
       const [lin, col] = posicao(el.z);
       return `<button data-z="${el.z}" title="${NOMES_PT[el.z - 1]}"
@@ -234,4 +246,4 @@ fetch("/api/elementos")
     setModo("livre");
     if (!lerFlag()) tutIniciar();
   })
-  .catch(() => status("Não foi possível carregar a PubChem. Rode com: python server.py", "red"));
+  .catch(() => status("Não foi possível carregar a PubChem. Verifique sua internet.", "red"));
