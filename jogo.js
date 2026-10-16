@@ -1,4 +1,6 @@
-// Monte um Átomo — dados dos elementos vêm da PubChem (via server.py)
+// Monte um Átomo — dados dos elementos vêm da PubChem
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 const NOMES_PT = "Hidrogênio,Hélio,Lítio,Berílio,Boro,Carbono,Nitrogênio,Oxigênio,Flúor,Neônio,Sódio,Magnésio,Alumínio,Silício,Fósforo,Enxofre,Cloro,Argônio,Potássio,Cálcio,Escândio,Titânio,Vanádio,Cromo,Manganês,Ferro,Cobalto,Níquel,Cobre,Zinco,Gálio,Germânio,Arsênio,Selênio,Bromo,Criptônio,Rubídio,Estrôncio,Ítrio,Zircônio,Nióbio,Molibdênio,Tecnécio,Rutênio,Ródio,Paládio,Prata,Cádmio,Índio,Estanho,Antimônio,Telúrio,Iodo,Xenônio,Césio,Bário,Lantânio,Cério,Praseodímio,Neodímio,Promécio,Samário,Európio,Gadolínio,Térbio,Disprósio,Hólmio,Érbio,Túlio,Itérbio,Lutécio,Háfnio,Tântalo,Tungstênio,Rênio,Ósmio,Irídio,Platina,Ouro,Mercúrio,Tálio,Chumbo,Bismuto,Polônio,Astato,Radônio,Frâncio,Rádio,Actínio,Tório,Protactínio,Urânio,Netúnio,Plutônio,Amerício,Cúrio,Berquélio,Califórnio,Einstênio,Férmio,Mendelévio,Nobélio,Laurêncio,Rutherfórdio,Dúbnio,Seabórgio,Bóhrio,Hássio,Meitnério,Darmstádtio,Roentgênio,Copernício,Nihônio,Fleróvio,Moscóvio,Livermório,Tenesso,Oganessônio".split(",");
 const MAX = 118;
 const PART = {
@@ -36,33 +38,76 @@ function camadas(e) {
 // ponytail: "estável" = nêutrons a ±1 do isótopo mais comum (massa arredondada − Z); tabela real de isótopos se o professor exigir
 const estavel = (el) => Math.abs(st.n - (Math.round(el.massa) - st.p)) <= 1;
 
+// Cena 3D: núcleo no centro, cada camada é um anel inclinado com seus elétrons girando
+const caixa = $("atomo");
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(devicePixelRatio);
+caixa.prepend(renderer.domElement);
+const cena = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+camera.position.set(0, 0, 60);
+const controles = new OrbitControls(camera, renderer.domElement);
+controles.enableDamping = true;
+controles.enablePan = false;
+cena.add(new THREE.AmbientLight(0xffffff, 0.6));
+const luz = new THREE.DirectionalLight(0xffffff, 2);
+luz.position.set(20, 30, 40);
+cena.add(luz);
+const atomo = new THREE.Group();
+cena.add(atomo);
+const esfera = new THREE.SphereGeometry(1, 20, 16);
+const MAT = Object.fromEntries(Object.entries(PART).map(([k, v]) => [k, new THREE.MeshStandardMaterial({ color: v.cor, roughness: 0.4 })]));
+const matAnel = new THREE.MeshBasicMaterial({ color: 0xc4b5fd, transparent: true, opacity: 0.35 });
+let aneis = [];
+
+new ResizeObserver(() => {
+  const w = caixa.clientWidth, h = caixa.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}).observe(caixa);
+
+renderer.setAnimationLoop(() => {
+  const parado = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!parado) aneis.forEach((g, i) => (g.children[1].rotation.z += 0.01 / (1 + i * 0.5)));
+  controles.update();
+  renderer.render(cena, camera);
+});
+
 function desenhar() {
-  const svg = $("atomo"), cam = camadas(st.e), total = st.p + st.n;
-  // núcleo e camadas encolhem conforme o átomo cresce, para tudo caber no quadro
-  const raioNucleo = Math.min(55, 6 * Math.sqrt(total) + 4);
-  const passoCamada = Math.min(40, (190 - raioNucleo - 18) / Math.max(1, cam.length - 1));
-  const rEletron = cam.length > 4 ? 3.5 : 6;
-  const rParticula = Math.max(2.5, Math.min(7, (raioNucleo / Math.sqrt(total || 1)) * 0.9));
-  let h = "";
-  cam.forEach((qtd, i) => {
-    const r = raioNucleo + 18 + i * passoCamada;
-    h += `<circle cx="200" cy="200" r="${r}" fill="none" stroke="#c4b5fd" stroke-dasharray="4 4"/>`;
-    h += `<g class="orbita" style="animation-duration:${8 + i * 4}s">`;
-    for (let k = 0; k < qtd; k++) {
-      const a = (2 * Math.PI * k) / qtd;
-      h += `<circle cx="${200 + r * Math.cos(a)}" cy="${200 + r * Math.sin(a)}" r="${rEletron}" fill="${PART.e.cor}"/>`;
-    }
-    h += "</g>";
-  });
-  // núcleo: prótons e nêutrons intercalados numa espiral
+  for (const c of [...atomo.children]) { atomo.remove(c); c.traverse((o) => o.geometry !== esfera && o.geometry?.dispose()); }
+  const cam = camadas(st.e), total = st.p + st.n;
+  $("atomoVazio").hidden = total + st.e > 0;
+  // núcleo: prótons e nêutrons intercalados, espalhados numa bola (espiral de Fibonacci)
   const nucleo = [];
   for (let i = 0; i < Math.max(st.p, st.n); i++) { if (i < st.p) nucleo.push("p"); if (i < st.n) nucleo.push("n"); }
+  const raioNucleo = 1.1 * Math.cbrt(total);
   nucleo.forEach((t, i) => {
-    const r = (raioNucleo - rParticula) * Math.sqrt(i / total), a = i * 2.4;
-    h += `<circle cx="${200 + r * Math.cos(a)}" cy="${200 + r * Math.sin(a)}" r="${rParticula}" fill="${PART[t].cor}" stroke="#fff" stroke-width="1"/>`;
+    const m = new THREE.Mesh(esfera, MAT[t]);
+    const y = 1 - (2 * (i + 0.5)) / total, r = Math.sqrt(1 - y * y), a = i * 2.39996;
+    const d = raioNucleo * Math.cbrt((i + 1) / total);
+    m.position.set(Math.cos(a) * r * d, y * d, Math.sin(a) * r * d);
+    atomo.add(m);
   });
-  if (!st.p && !st.n && !st.e) h += `<text x="200" y="205" text-anchor="middle" fill="#9ca3af" font-size="14">Adicione partículas abaixo</text>`;
-  svg.innerHTML = h;
+  aneis = cam.map((qtd, i) => {
+    const raio = raioNucleo + 5 + i * 4.5;
+    const g = new THREE.Group();
+    g.rotation.set(i * 0.9, i * 0.6, 0); // cada camada num ângulo diferente
+    g.add(new THREE.Mesh(new THREE.TorusGeometry(raio, 0.08, 8, 96), matAnel));
+    const giro = new THREE.Group();
+    for (let k = 0; k < qtd; k++) {
+      const e = new THREE.Mesh(esfera, MAT.e), ang = (2 * Math.PI * k) / qtd;
+      e.scale.setScalar(0.6);
+      e.position.set(Math.cos(ang) * raio, Math.sin(ang) * raio, 0);
+      giro.add(e);
+    }
+    g.add(giro);
+    atomo.add(g);
+    return g;
+  });
+  // afasta a câmera para caber o átomo inteiro
+  const alcance = cam.length ? raioNucleo + 5 + (cam.length - 1) * 4.5 : raioNucleo + 3;
+  camera.position.setLength(Math.max(20, alcance * 3));
 }
 
 function atualizar() {
@@ -76,8 +121,10 @@ function atualizar() {
   $("iTipo").textContent = !el ? "-" : carga === 0 ? "Átomo neutro" : carga > 0 ? "Cátion" : "Ânion";
   $("iEstavel").innerHTML = !el ? "-" : estavel(el) ? '<span class="text-green-600">Estável</span>' : '<span class="text-red-500">Instável</span>';
   $("cartao").innerHTML = el
-    ? `<span class="text-[10px] text-gray-500">${st.p + st.n}</span><span class="text-3xl font-bold" style="color:#${el.cor === "FFFFFF" ? "6d28d9" : el.cor}">${el.simbolo}</span><span class="text-[10px] text-purple-700">${carga ? txtCarga : ""}</span>`
+    ? `<span class="text-sm text-gray-600">${st.p + st.n}</span><span class="text-6xl font-bold text-gray-900">${el.simbolo}</span><span class="text-sm font-semibold text-purple-700">${carga ? txtCarga : ""}</span>`
     : '<span class="text-gray-400 text-2xl">?</span>';
+  // mesma cor da tabela, como fundo; o símbolo fica escuro para dar leitura
+  $("cartao").style.background = el ? `#${el.cor}55` : "";
   document.querySelectorAll(".el").forEach((b) => b.classList.toggle("ring-2", +b.dataset.z === st.p));
   tutChecar();
 }
