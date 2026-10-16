@@ -22,6 +22,7 @@
       #050510;
     background-attachment: fixed;
   }
+  [hidden] { display: none !important; } /* senão classes como "flex" mostram o que está escondido */
   h1, h2, h3, button, .font-game { font-family: 'Space Grotesk', sans-serif; letter-spacing: -.01em; }
   .contador b, #cartao, .font-mono { font-family: 'Fira Code', monospace; }
   .btn-3d { box-shadow: 0 4px 0 #4c1d95; transition: transform .08s, box-shadow .08s; }
@@ -45,7 +46,7 @@
 <div class="max-w-6xl mx-auto p-4 grid gap-4 lg:grid-cols-[1fr_24rem]">
 
   <!-- Área do átomo -->
-  <section class="bg-white/95 rounded-2xl shadow-2xl border border-gray-200 p-4">
+  <section class="lg:h-[calc(100dvh-2rem)] flex flex-col bg-white/95 rounded-2xl shadow-2xl border border-gray-200 p-4">
     <header class="flex flex-wrap items-center gap-3 mb-3">
       <img src="arly.png" alt="Arly" class="w-12 h-12 shrink-0 object-contain drop-shadow-md">
       <div>
@@ -68,7 +69,7 @@
       <button id="verificar" class="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-4 py-1.5 rounded-xl font-semibold btn-3d">Verificar</button>
     </div>
 
-    <div id="atomo" class="relative w-full max-w-md mx-auto aspect-square bg-[#050510] rounded-2xl border-2 border-purple-500/40 overflow-hidden cursor-grab active:cursor-grabbing" role="img" aria-label="Átomo 3D: arraste para girar, role para dar zoom">
+    <div id="atomo" class="relative w-full aspect-square lg:aspect-auto lg:flex-1 lg:min-h-0 bg-[#050510] rounded-2xl border-2 border-purple-500/40 overflow-hidden cursor-grab active:cursor-grabbing" role="img" aria-label="Átomo 3D: arraste para girar, role para dar zoom">
       <span id="atomoVazio" class="absolute inset-0 flex items-center justify-center text-sm text-purple-200/70 pointer-events-none">Adicione partículas abaixo</span>
       <span class="absolute bottom-2 left-3 text-[10px] text-purple-200/60 pointer-events-none">Arraste para girar · role para zoom</span>
     </div>
