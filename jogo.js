@@ -143,7 +143,7 @@ for (const div of document.querySelectorAll(".contador")) {
     <b class="block text-2xl my-1">0</b>
     <div class="flex gap-1 justify-center">
       <button aria-label="Remover ${p.nome}" class="w-9 h-9 rounded-lg bg-gray-200 hover:bg-gray-300 text-lg">−</button>
-      <button aria-label="Adicionar ${p.nome}" class="w-9 h-9 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white text-lg shadow-md">+</button>
+      <button aria-label="Adicionar ${p.nome}" class="w-9 h-9 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white text-lg btn-3d">+</button>
     </div>`;
   const [menos, mais] = div.querySelectorAll("button");
   menos.onclick = () => mudar(div.dataset.p, -1);
@@ -164,7 +164,6 @@ const PASSOS = [
   { alvo: "#modos", txt: "No modo Desafio eu peço um átomo ou íon e você monta sozinho. São 10 rodadas valendo pontos. Boa sorte!" },
 ];
 let passo = -1, focado = null;
-const lerFlag = () => { try { return localStorage.getItem("tutFeito"); } catch { return null; } };
 
 function tutIniciar() {
   setModo("livre");
@@ -208,7 +207,6 @@ function tutFim() {
   focado?.classList.remove("foco");
   $("tutBlur").classList.add("hidden");
   $("tutCard").classList.add("hidden");
-  try { localStorage.setItem("tutFeito", "1"); } catch {}
 }
 
 $("tutProximo").onclick = tutAvancar;
@@ -234,7 +232,7 @@ fetch("https://pubchem.ncbi.nlm.nih.gov/rest/pug/periodictable/JSON")
     $("tabela").innerHTML = EL.map((el) => {
       const [lin, col] = posicao(el.z);
       return `<button data-z="${el.z}" title="${NOMES_PT[el.z - 1]}"
-        class="el aspect-square rounded-sm text-[8px] font-bold ring-purple-600"
+        class="el aspect-square rounded-sm text-[10px] sm:text-sm md:text-base font-bold ring-purple-600"
         style="grid-row:${lin};grid-column:${col};background:#${el.cor}55">${el.simbolo}</button>`;
     }).join("");
     document.querySelectorAll(".el").forEach((b) => (b.onclick = () => {
@@ -244,6 +242,6 @@ fetch("https://pubchem.ncbi.nlm.nih.gov/rest/pug/periodictable/JSON")
       atualizar();
     }));
     setModo("livre");
-    if (!lerFlag()) tutIniciar();
+    tutIniciar(); // tutorial sempre é a primeira coisa ao entrar
   })
   .catch(() => status("Não foi possível carregar a PubChem. Verifique sua internet.", "red"));

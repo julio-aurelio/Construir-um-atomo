@@ -6,8 +6,25 @@
 <title>Monte um Átomo - TCC Química</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="icon" href="arly.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=Fira+Code:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
-  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+  /* mesmo visual do Balanceamento de Equações: céu estrelado + brilho roxo/azul */
+  body {
+    font-family: Inter, system-ui, 'Segoe UI', Roboto, sans-serif;
+    background:
+      radial-gradient(1.5px 1.5px at 12% 18%, #fff9, transparent), radial-gradient(1px 1px at 78% 12%, #fff8, transparent),
+      radial-gradient(1.5px 1.5px at 45% 70%, #fff6, transparent), radial-gradient(1px 1px at 88% 60%, #fff8, transparent),
+      radial-gradient(1px 1px at 25% 85%, #fff7, transparent), radial-gradient(1.5px 1.5px at 62% 35%, #fff5, transparent),
+      radial-gradient(circle at 15% 0%, #6d28d955, transparent 45%), radial-gradient(circle at 90% 100%, #2563eb44, transparent 45%),
+      #050510;
+    background-attachment: fixed;
+  }
+  h1, h2, h3, button, .font-game { font-family: 'Space Grotesk', sans-serif; letter-spacing: -.01em; }
+  .contador b, #cartao, .font-mono { font-family: 'Fira Code', monospace; }
+  .btn-3d { box-shadow: 0 4px 0 #4c1d95; transition: transform .08s, box-shadow .08s; }
+  .btn-3d:active { transform: translateY(3px); box-shadow: 0 1px 0 #4c1d95; }
+  .btn-3d-cinza { box-shadow: 0 4px 0 #d1d5db; transition: transform .08s, box-shadow .08s; }
+  .btn-3d-cinza:active { transform: translateY(3px); box-shadow: 0 1px 0 #d1d5db; }
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
   .orbita { animation: gira linear infinite; transform-origin: 200px 200px; }
@@ -15,26 +32,27 @@
   .el { transition: transform .15s; }
   .el:hover:not(:disabled) { transform: scale(1.2); }
   /* elemento em destaque durante o tutorial fica acima do blur */
-  .foco { position: relative; z-index: 50; box-shadow: 0 0 0 4px #a855f7, 0 0 0 9999px transparent; border-radius: 1rem; background: #fff; }
+  .foco { position: relative; z-index: 50; outline: 4px solid #facc15; outline-offset: 4px; border-radius: 1rem; background: #fff; animation: brilho 1.2s ease-in-out infinite; }
+  @keyframes brilho { 50% { outline-color: rgba(250, 204, 21, .2); } }
   .flutua { animation: flutua 3s ease-in-out infinite; }
   @keyframes flutua { 50% { transform: translateY(-6px); } }
   @media (prefers-reduced-motion: reduce) { .orbita, .flutua { animation: none; } }
 </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 text-gray-800">
+<body class="min-h-screen text-gray-800">
 
 <div class="max-w-6xl mx-auto p-4 grid gap-4 lg:grid-cols-[1fr_24rem]">
 
   <!-- Área do átomo -->
   <section class="bg-white/95 rounded-2xl shadow-2xl border border-gray-200 p-4">
     <header class="flex flex-wrap items-center gap-3 mb-3">
-      <img src="arly.png" alt="Arly" class="w-12 h-12 shrink-0 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 p-0.5 object-contain">
+      <img src="arly.png" alt="Arly" class="w-12 h-12 shrink-0 object-contain drop-shadow-md">
       <div>
-        <h1 class="text-xl font-bold">Monte um Átomo</h1>
+        <h1 class="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Monte um Átomo</h1>
         <p class="text-xs text-gray-500">Dados da PubChem · Prótons, nêutrons e elétrons</p>
       </div>
       <div class="ml-auto flex items-center gap-2">
-        <button id="abrirTutorial" class="text-xs px-3 py-1.5 rounded-full border border-purple-300 text-purple-700 hover:bg-purple-50">Tutorial</button>
+        <button id="abrirTutorial" class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-xl text-sm font-semibold transition btn-3d-cinza">Como jogar</button>
         <div id="modos" class="flex gap-1 bg-gray-100 rounded-full p-1 text-sm">
           <button data-modo="livre" class="modo px-3 py-1.5 rounded-full">Livre</button>
           <button data-modo="desafio" class="modo px-3 py-1.5 rounded-full">Desafio</button>
@@ -46,7 +64,7 @@
       <span class="font-semibold text-purple-700">Monte:</span>
       <span id="alvo" class="font-bold text-base"></span>
       <span class="ml-auto text-gray-600">Rodada <b id="rodada"></b>/10 · Pontos <b id="pontos">0</b></span>
-      <button id="verificar" class="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-4 py-1.5 rounded-xl shadow-md">Verificar</button>
+      <button id="verificar" class="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-4 py-1.5 rounded-xl font-semibold btn-3d">Verificar</button>
     </div>
 
     <svg id="atomo" viewBox="0 0 400 400" class="w-full max-w-md mx-auto block" role="img" aria-label="Desenho do átomo"></svg>
@@ -56,7 +74,7 @@
       <div class="contador" data-p="n"></div>
       <div class="contador" data-p="e"></div>
     </div>
-    <button id="limpar" class="mt-3 text-xs px-3 py-1.5 bg-gray-200 rounded hover:bg-gray-300 transition">Limpar átomo</button>
+    <button id="limpar" class="mt-3 text-xs px-3 py-1.5 bg-gray-100 rounded-xl font-semibold hover:bg-gray-200 transition btn-3d-cinza">Limpar átomo</button>
   </section>
 
   <!-- Painel de informações -->
@@ -74,15 +92,16 @@
       </dl>
     </div>
 
-    <div id="tabelaBox" class="p-2">
-      <div class="text-xs font-semibold text-gray-600 mb-2">Tabela periódica <span class="font-normal text-gray-400">· clique para montar o elemento</span></div>
-      <div id="tabela" class="grid gap-[2px]" style="grid-template-columns: repeat(18, minmax(0, 1fr));"></div>
-    </div>
   </aside>
+
+  <section id="tabelaBox" class="lg:col-span-2 bg-white/95 rounded-2xl shadow-2xl border border-gray-200 p-4">
+    <div class="text-sm font-semibold text-gray-600 mb-2">Tabela periódica <span class="font-normal text-gray-400">· clique para montar o elemento</span></div>
+    <div id="tabela" class="grid gap-1" style="grid-template-columns: repeat(18, minmax(0, 1fr));"></div>
+  </section>
 </div>
 
 <!-- Tutorial: o blur bloqueia tudo, menos o elemento em foco -->
-<div id="tutBlur" class="hidden fixed inset-0 z-40 bg-purple-950/30 backdrop-blur-sm"></div>
+<div id="tutBlur" class="hidden fixed inset-0 z-40 bg-[#050510]/60 backdrop-blur-sm"></div>
 <div id="tutCard" class="hidden fixed z-50 inset-x-4 sm:inset-x-auto sm:left-6 max-w-md flex items-end gap-3" role="dialog" aria-live="polite">
   <img src="arly.png" alt="Arly, a professora guia" class="w-28 sm:w-36 shrink-0 flutua drop-shadow-xl">
   <div class="bg-white rounded-2xl shadow-2xl border border-purple-200 p-4 mb-4">
@@ -90,7 +109,7 @@
     <p id="tutTexto" class="text-sm text-gray-700"></p>
     <div class="flex justify-between items-center mt-3">
       <button id="tutPular" class="text-xs text-gray-400 hover:text-gray-600">Pular tutorial</button>
-      <button id="tutProximo" class="bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm px-4 py-1.5 rounded-xl shadow-md">Próximo</button>
+      <button id="tutProximo" class="bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm px-4 py-1.5 rounded-xl font-semibold btn-3d">Próximo</button>
     </div>
   </div>
 </div>
