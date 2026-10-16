@@ -111,7 +111,7 @@ function desenhar() {
 }
 
 function atualizar() {
-  for (const div of document.querySelectorAll(".contador")) div.querySelector("b").textContent = st[div.dataset.p];
+  for (const div of document.querySelectorAll(".contador")) div.querySelector("input").value = st[div.dataset.p];
   desenhar();
   const el = EL[st.p - 1], carga = st.p - st.e;
   const txtCarga = carga === 0 ? "0" : `${Math.abs(carga)}${carga > 0 ? "+" : "−"}`;
@@ -187,7 +187,7 @@ for (const div of document.querySelectorAll(".contador")) {
   div.innerHTML = `
     <div class="text-xs font-semibold flex items-center justify-center gap-1"><span class="w-3 h-3 rounded-full inline-block" style="background:${p.cor}"></span>${p.nome} ${p.sinal}</div>
     <div class="text-[11px] text-gray-400">${p.dica}</div>
-    <b class="block text-2xl my-1">0</b>
+    <input type="number" min="0" value="0" aria-label="Quantidade de ${p.nome}" class="block w-20 mx-auto text-2xl font-bold text-center my-1 bg-transparent rounded-lg border border-transparent hover:border-gray-300 focus:border-purple-500 outline-none">
     <div class="flex gap-1 justify-center">
       <button aria-label="Remover ${p.nome}" class="w-9 h-9 rounded-lg bg-gray-200 hover:bg-gray-300 text-lg">−</button>
       <button aria-label="Adicionar ${p.nome}" class="w-9 h-9 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white text-lg btn-3d">+</button>
@@ -195,6 +195,8 @@ for (const div of document.querySelectorAll(".contador")) {
   const [menos, mais] = div.querySelectorAll("button");
   menos.onclick = () => mudar(div.dataset.p, -1);
   mais.onclick = () => mudar(div.dataset.p, 1);
+  // digitar o número direto: mudar() já limita entre 0 e o máximo
+  div.querySelector("input").onchange = (ev) => mudar(div.dataset.p, (parseInt(ev.target.value) || 0) - st[div.dataset.p]);
 }
 document.querySelectorAll(".modo").forEach((b) => (b.onclick = () => setModo(b.dataset.modo)));
 $("limpar").onclick = () => { Object.assign(st, { p: 0, n: 0, e: 0 }); atualizar(); };
