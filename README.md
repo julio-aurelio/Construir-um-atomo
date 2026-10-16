@@ -1,5 +1,7 @@
 # Monte um Átomo
 
+![Capa do jogo](capa.png)
+
 Jogo educativo de química, feito para o TCC. O jogador adiciona prótons, nêutrons e elétrons e monta átomos e íons dos 118 elementos da tabela periódica. Os dados dos elementos vêm da API da [PubChem](https://pubchem.ncbi.nlm.nih.gov/).
 
 A mascote **Arly** é a professora que guia o tutorial.
